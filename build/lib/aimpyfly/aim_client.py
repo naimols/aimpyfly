@@ -41,6 +41,21 @@ class AIMClient:
         for i in range(len(password)):
             roasted_pass[i] = password[i] ^ roast_table[i % len(roast_table)]
         return bytes(roasted_pass)
+
+    async def set_profile(self, profile_text):
+    """Send a request to update the AIM profile (More Info section)."""
+    try:
+        if len(profile_text) > 1024:
+            profile_text = profile_text[:1024]  # Truncate to max length
+
+        # SNAC(0x02, 0x04) is used to update user information
+        snac_data = b"\x00\x01" + len(profile_text).to_bytes(2, "big") + profile_text.encode("utf-8")
+
+        # Send the SNAC packet to update the profile
+        await self.send_snac(0x02, 0x04, snac_data)
+        self.logger.info("Profile updated successfully.")
+    except Exception as e:
+        self.logger.error(f"Failed to update AIM profile: {e}")
     
     async def process_incoming_packets(self):
         self.logger.info("Started processing incoming packets")
